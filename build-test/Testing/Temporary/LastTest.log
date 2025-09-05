@@ -1,0 +1,20 @@
+Start testing: Sep 05 16:20 CST
+----------------------------------------------------------
+1/1 Testing: test_c_x
+1/1 Test: test_c_x
+Command: "/Users/maxingfang/CLionProjects/c-x/build-test/tests/test_c_x"
+Directory: /Users/maxingfang/CLionProjects/c-x/build-test/tests
+"test_c_x" start time: Sep 05 16:20 CST
+Output:
+----------------------------------------------------------
+Running tests for C-X version 0.1.0
+All tests passed!
+<end of output>
+Test time =   0.17 sec
+----------------------------------------------------------
+Test Passed.
+"test_c_x" end time: Sep 05 16:20 CST
+"test_c_x" time elapsed: 00:00:00
+----------------------------------------------------------
+
+End testing: Sep 05 16:20 CST

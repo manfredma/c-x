@@ -1,0 +1,34 @@
+# 构建目录
+build/
+cmake-build-*/
+
+# IDE文件
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# 编译产物
+*.o
+*.obj
+*.exe
+*.out
+*.a
+*.so
+*.dll
+*.dylib
+
+# CMake生成的文件
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+install_manifest.txt
+compile_commands.json
+
+# 生成的版本文件
+include/version.h
+
+# 系统文件
+.DS_Store
+Thumbs.db
+

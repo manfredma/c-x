@@ -19,7 +19,12 @@ endif()
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 # 源文件
-file(GLOB_RECURSE SOURCES "src/*.c")
+set(SOURCES
+    src/main.c
+    src/kv_store.c
+    src/http_parser.c
+    src/kqueue_net.c
+)
 
 # 主可执行文件
 add_executable(${PROJECT_NAME} ${SOURCES})

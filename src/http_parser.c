@@ -9,6 +9,7 @@ const char* http_method_to_string(HttpMethod method) {
         case HTTP_GET: return "GET";
         case HTTP_POST: return "POST";
         case HTTP_DELETE: return "DELETE";
+        case HTTP_OPTIONS: return "OPTIONS";
         default: return "UNKNOWN";
     }
 }
@@ -18,6 +19,7 @@ HttpMethod http_string_to_method(const char *method_str) {
     if (strcmp(method_str, "GET") == 0) return HTTP_GET;
     if (strcmp(method_str, "POST") == 0) return HTTP_POST;
     if (strcmp(method_str, "DELETE") == 0) return HTTP_DELETE;
+    if (strcmp(method_str, "OPTIONS") == 0) return HTTP_OPTIONS;
     return HTTP_UNKNOWN;
 }
 
@@ -231,6 +233,62 @@ char* http_build_response(HttpResponse *response, size_t *response_length) {
         "HTTP/1.1 %d %s\r\n"
         "Content-Type: %s\r\n"
         "Content-Length: %zu\r\n"
+        "Connection: close\r\n"
+        "\r\n",
+        response->status_code,
+        response->status_text,
+        response->content_type,
+        response->body_length);
+
+    // 添加响应体
+    if (response->body_length > 0) {
+        memcpy(response_str + written, response->body, response->body_length);
+    }
+
+    response_str[total_size] = '\0';
+
+    if (response_length) {
+        *response_length = total_size;
+    }
+
+    return response_str;
+}
+
+// 构建带 CORS 头部的 HTTP 响应字符串
+char* http_build_response_with_cors(HttpResponse *response, size_t *response_length) {
+    if (!response) {
+        return NULL;
+    }
+
+    // 计算响应字符串的大小（包含 CORS 头部）
+    size_t header_size = snprintf(NULL, 0,
+        "HTTP/1.1 %d %s\r\n"
+        "Content-Type: %s\r\n"
+        "Content-Length: %zu\r\n"
+        "Access-Control-Allow-Origin: *\r\n"
+        "Access-Control-Allow-Methods: GET, POST, DELETE, OPTIONS\r\n"
+        "Access-Control-Allow-Headers: Content-Type\r\n"
+        "Connection: close\r\n"
+        "\r\n",
+        response->status_code,
+        response->status_text,
+        response->content_type,
+        response->body_length);
+
+    size_t total_size = header_size + response->body_length;
+    char *response_str = malloc(total_size + 1);
+    if (!response_str) {
+        return NULL;
+    }
+
+    // 构建响应头
+    int written = snprintf(response_str, header_size + 1,
+        "HTTP/1.1 %d %s\r\n"
+        "Content-Type: %s\r\n"
+        "Content-Length: %zu\r\n"
+        "Access-Control-Allow-Origin: *\r\n"
+        "Access-Control-Allow-Methods: GET, POST, DELETE, OPTIONS\r\n"
+        "Access-Control-Allow-Headers: Content-Type\r\n"
         "Connection: close\r\n"
         "\r\n",
         response->status_code,

@@ -9,6 +9,7 @@ typedef enum {
     HTTP_GET,
     HTTP_POST,
     HTTP_DELETE,
+    HTTP_OPTIONS,
     HTTP_UNKNOWN
 } HttpMethod;
 
@@ -36,6 +37,7 @@ void http_free_request(HttpRequest *request);
 
 HttpResponse* http_create_response(int status_code, const char *body);
 char* http_build_response(HttpResponse *response, size_t *response_length);
+char* http_build_response_with_cors(HttpResponse *response, size_t *response_length);
 void http_free_response(HttpResponse *response);
 
 // 辅助函数

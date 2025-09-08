@@ -323,12 +323,15 @@ static void process_http_request(KVServer *server, int client_fd, const char *re
             "{\"status\":\"ok\",\"service\":\"KV Storage Server\",\"timestamp\":%ld}",
             time(NULL));
 
-        char *health_response = malloc(json_len + 150);
+        char *health_response = malloc(json_len + 300);
         if (health_response) {
-            int response_len = snprintf(health_response, json_len + 150,
+            int response_len = snprintf(health_response, json_len + 300,
                 "HTTP/1.1 200 OK\r\n"
                 "Content-Type: application/json\r\n"
                 "Content-Length: %d\r\n"
+                "Access-Control-Allow-Origin: *\r\n"
+                "Access-Control-Allow-Methods: GET, POST, DELETE, OPTIONS\r\n"
+                "Access-Control-Allow-Headers: Content-Type\r\n"
                 "Connection: close\r\n"
                 "\r\n%s", json_len, json_response);
 
@@ -338,6 +341,23 @@ static void process_http_request(KVServer *server, int client_fd, const char *re
 
         http_free_request(http_req);
         VERBOSE_LOG("健康检查/连接测试请求处理完成");
+        return;
+    }
+
+    // 2.6. 处理 OPTIONS 请求（CORS 预检）
+    if (http_req->method == HTTP_OPTIONS) {
+        VERBOSE_LOG("处理 OPTIONS 预检请求: %s", http_req->path);
+        const char *options_response = "HTTP/1.1 200 OK\r\n"
+                                     "Access-Control-Allow-Origin: *\r\n"
+                                     "Access-Control-Allow-Methods: GET, POST, DELETE, OPTIONS\r\n"
+                                     "Access-Control-Allow-Headers: Content-Type\r\n"
+                                     "Access-Control-Max-Age: 86400\r\n"
+                                     "Content-Length: 0\r\n"
+                                     "Connection: close\r\n"
+                                     "\r\n";
+        send(client_fd, options_response, strlen(options_response), 0);
+        http_free_request(http_req);
+        VERBOSE_LOG("OPTIONS 预检请求处理完成");
         return;
     }
 
@@ -434,7 +454,7 @@ static void process_http_request(KVServer *server, int client_fd, const char *re
 
         if (response) {
             size_t response_len;
-            char *response_str = http_build_response(response, &response_len);
+            char *response_str = http_build_response_with_cors(response, &response_len);
             if (response_str) {
                 VERBOSE_LOG("发送响应，状态码: %d，长度: %zu", response->status_code, response_len);
                 send(client_fd, response_str, response_len, 0);

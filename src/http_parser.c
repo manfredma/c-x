@@ -57,14 +57,19 @@ HttpRequest* http_parse_request(const char *raw_request, size_t length) {
 
     // 查找请求行结束位置
     char *line_end = strstr(request_copy, "\r\n");
+    bool has_crlf = true;
     if (!line_end) {
         line_end = strstr(request_copy, "\n");
+        has_crlf = false;
         if (!line_end) {
             free(request_copy);
             free(request);
             return NULL;
         }
     }
+
+    // 计算请求行长度
+    size_t line_len = line_end - request_copy;
 
     // 解析请求行：METHOD PATH HTTP/1.1
     *line_end = '\0';
@@ -89,29 +94,54 @@ HttpRequest* http_parse_request(const char *raw_request, size_t length) {
         return NULL;
     }
 
-    // 查找请求头和请求体的分界线
-    char *headers_start = line_end + (line_end[0] == '\r' ? 2 : 1);
+    // 查找请求头和请求体的分界线（基于原始请求）
     char *body_separator = strstr(raw_request, "\r\n\r\n");
+    int separator_len = 4;
     if (!body_separator) {
         body_separator = strstr(raw_request, "\n\n");
+        separator_len = 2;
     }
+
+    // 计算请求头开始位置（基于原始请求）
+    size_t headers_start_offset = line_len + (has_crlf ? 2 : 1);
+
+    // 安全检查：确保偏移量不超过请求长度
+    if (headers_start_offset >= length) {
+        free(request_copy);
+        return request; // 只有请求行，没有头部
+    }
+
+    char *headers_start_in_raw = raw_request + headers_start_offset;
 
     if (body_separator) {
         // 有请求体
-        size_t headers_len = body_separator - headers_start;
-        if (headers_len > 0) {
+        // 安全检查：确保 body_separator 在有效范围内
+        if (body_separator < headers_start_in_raw || body_separator >= raw_request + length) {
+            free(request_copy);
+            return request;
+        }
+
+        size_t headers_len = body_separator - headers_start_in_raw;
+        if (headers_len > 0 && headers_len < 8192) { // 限制头部大小
             request->headers = malloc(headers_len + 1);
             if (request->headers) {
-                memcpy(request->headers, headers_start, headers_len);
+                memcpy(request->headers, headers_start_in_raw, headers_len);
                 request->headers[headers_len] = '\0';
             }
         }
 
         // 解析请求体
-        char *body_start = body_separator + (strstr(body_separator, "\r\n\r\n") ? 4 : 2);
+        char *body_start = body_separator + separator_len;
+
+        // 安全检查：确保 body_start 在有效范围内
+        if (body_start >= raw_request + length) {
+            free(request_copy);
+            return request;
+        }
+
         size_t body_len = length - (body_start - raw_request);
 
-        if (body_len > 0) {
+        if (body_len > 0 && body_len < 1024 * 1024) { // 限制请求体大小为1MB
             request->body = malloc(body_len + 1);
             if (request->body) {
                 memcpy(request->body, body_start, body_len);
@@ -121,11 +151,11 @@ HttpRequest* http_parse_request(const char *raw_request, size_t length) {
         }
     } else {
         // 没有请求体，只有请求头
-        size_t headers_len = length - (headers_start - raw_request);
-        if (headers_len > 0) {
+        size_t headers_len = length - headers_start_offset;
+        if (headers_len > 0 && headers_len < 8192) { // 限制头部大小
             request->headers = malloc(headers_len + 1);
             if (request->headers) {
-                memcpy(request->headers, headers_start, headers_len);
+                memcpy(request->headers, headers_start_in_raw, headers_len);
                 request->headers[headers_len] = '\0';
             }
         }

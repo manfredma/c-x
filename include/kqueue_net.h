@@ -4,6 +4,18 @@
 #include <sys/event.h>
 #include <stddef.h>
 #include <stdbool.h>
+#include <stdio.h>
+
+// 外部声明全局详细日志标志
+extern bool g_verbose;
+
+// 详细日志宏
+#define VERBOSE_LOG(fmt, ...) do { \
+    if (g_verbose) { \
+        printf("[VERBOSE] " fmt "\n", ##__VA_ARGS__); \
+        fflush(stdout); \
+    } \
+} while(0)
 
 // 前向声明
 struct KVStore;

@@ -1,5 +1,4 @@
 #include <stdio.h>
-#include <assert.h>
 #include "c_x.h"
 
 int main(void) {

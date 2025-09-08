@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KV 存储服务器测试页面</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 300;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1em;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .section {
+            margin-bottom: 40px;
+            padding: 25px;
+            border: 2px solid #f0f0f0;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .section:hover {
+            border-color: #4facfe;
+            box-shadow: 0 5px 15px rgba(79, 172, 254, 0.1);
+        }
+
+        .section h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+            display: flex;
+            align-items: center;
+        }
+
+        .section h2::before {
+            content: '';
+            width: 4px;
+            height: 20px;
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            margin-right: 10px;
+            border-radius: 2px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #555;
+        }
+
+        input[type="text"], textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e1e1e1;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s ease;
+        }
+
+        input[type="text"]:focus, textarea:focus {
+            outline: none;
+            border-color: #4facfe;
+            box-shadow: 0 0 0 3px rgba(79, 172, 254, 0.1);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(79, 172, 254, 0.4);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
+        }
+
+        .btn-danger:hover {
+            box-shadow: 0 5px 15px rgba(255, 107, 107, 0.4);
+        }
+
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 13px;
+            line-height: 1.5;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        .result.success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+
+        .result.error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+
+        .result.info {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+        }
+
+        .server-status {
+            text-align: center;
+            padding: 20px;
+            margin-bottom: 30px;
+            border-radius: 10px;
+            font-weight: 500;
+        }
+
+        .server-status.online {
+            background: #d4edda;
+            color: #155724;
+            border: 2px solid #c3e6cb;
+        }
+
+        .server-status.offline {
+            background: #f8d7da;
+            color: #721c24;
+            border: 2px solid #f5c6cb;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .status-indicator.online {
+            background: #28a745;
+            animation: pulse 2s infinite;
+        }
+
+        .status-indicator.offline {
+            background: #dc3545;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .quick-test {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .quick-test .btn {
+            margin: 0;
+            padding: 15px;
+            text-align: center;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px;
+                border-radius: 10px;
+            }
+
+            .content {
+                padding: 20px;
+            }
+
+            .header {
+                padding: 20px;
+            }
+
+            .header h1 {
+                font-size: 2em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 KV 存储服务器</h1>
+            <p>基于 kqueue 的高性能内存键值存储服务测试页面</p>
+        </div>
+
+        <div class="content">
+            <!-- 服务器状态 -->
+            <div id="serverStatus" class="server-status offline">
+                <span class="status-indicator offline"></span>
+                正在检查服务器状态...
+            </div>
+
+            <!-- 快速测试 -->
+            <div class="section">
+                <h2>🎯 快速测试</h2>
+                <p style="margin-bottom: 20px; color: #666;">点击下面的按钮进行快速功能测试</p>
+                <div class="quick-test">
+                    <button class="btn" onclick="quickTest('set')">设置测试数据</button>
+                    <button class="btn" onclick="quickTest('get')">获取测试数据</button>
+                    <button class="btn btn-danger" onclick="quickTest('delete')">删除测试数据</button>
+                    <button class="btn" onclick="quickTest('all')">完整测试流程</button>
+                </div>
+                <div id="quickTestResult" class="result" style="display: none;"></div>
+            </div>
+
+            <!-- SET 操作 -->
+            <div class="section">
+                <h2>📝 设置键值对 (POST)</h2>
+                <div class="form-group">
+                    <label for="setKey">键 (Key):</label>
+                    <input type="text" id="setKey" placeholder="例如: user:123" value="test_key">
+                </div>
+                <div class="form-group">
+                    <label for="setValue">值 (Value):</label>
+                    <textarea id="setValue" placeholder="例如: Hello World">Hello, KV Store!</textarea>
+                </div>
+                <button class="btn" onclick="setKeyValue()">设置键值对</button>
+                <div id="setResult" class="result" style="display: none;"></div>
+            </div>
+
+            <!-- GET 操作 -->
+            <div class="section">
+                <h2>🔍 获取键值 (GET)</h2>
+                <div class="form-group">
+                    <label for="getKey">键 (Key):</label>
+                    <input type="text" id="getKey" placeholder="例如: user:123" value="test_key">
+                </div>
+                <button class="btn" onclick="getKeyValue()">获取键值</button>
+                <div id="getResult" class="result" style="display: none;"></div>
+            </div>
+
+            <!-- DELETE 操作 -->
+            <div class="section">
+                <h2>🗑️ 删除键值对 (DELETE)</h2>
+                <div class="form-group">
+                    <label for="deleteKey">键 (Key):</label>
+                    <input type="text" id="deleteKey" placeholder="例如: user:123" value="test_key">
+                </div>
+                <button class="btn btn-danger" onclick="deleteKeyValue()">删除键值对</button>
+                <div id="deleteResult" class="result" style="display: none;"></div>
+            </div>
+
+            <!-- 批量测试 -->
+            <div class="section">
+                <h2>⚡ 批量测试</h2>
+                <p style="margin-bottom: 20px; color: #666;">测试多个键值对的操作</p>
+                <button class="btn" onclick="batchTest()">开始批量测试</button>
+                <div id="batchResult" class="result" style="display: none;"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const SERVER_URL = 'http://localhost:8080';
+
+        const API_URL = SERVER_URL + '/api';
+
+        // 检查服务器状态
+        async function checkServerStatus() {
+            try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 3000);
+
+                const response = await fetch(`${SERVER_URL}/health`, {
+                    method: 'GET',
+                    signal: controller.signal
+                });
+
+                clearTimeout(timeoutId);
+
+                if (response.ok) {
+                    updateServerStatus(true);
+                } else {
+                    updateServerStatus(false);
+                }
+            } catch (error) {
+                // 如果 /health 失败，尝试 /test_connection
+                try {
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), 3000);
+
+                    const response = await fetch(`${SERVER_URL}/test_connection`, {
+                        method: 'GET',
+                        signal: controller.signal
+                    });
+
+                    clearTimeout(timeoutId);
+
+                    if (response.ok) {
+                        updateServerStatus(true);
+                    } else {
+                        updateServerStatus(false);
+                    }
+                } catch (e) {
+                    updateServerStatus(false);
+                }
+            }
+        }
+
+        function updateServerStatus(isOnline) {
+            const statusElement = document.getElementById('serverStatus');
+            const indicator = statusElement.querySelector('.status-indicator');
+
+            if (isOnline) {
+                statusElement.className = 'server-status online';
+                indicator.className = 'status-indicator online';
+                statusElement.innerHTML = '<span class="status-indicator online"></span>服务器在线 (localhost:8080)';
+            } else {
+                statusElement.className = 'server-status offline';
+                indicator.className = 'status-indicator offline';
+                statusElement.innerHTML = '<span class="status-indicator offline"></span>服务器离线 - 请确保服务器正在运行';
+            }
+        }
+
+        // 设置键值对
+        async function setKeyValue() {
+            const key = document.getElementById('setKey').value.trim();
+            const value = document.getElementById('setValue').value;
+            const resultDiv = document.getElementById('setResult');
+
+            if (!key) {
+                showResult(resultDiv, '请输入键名', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/${encodeURIComponent(key)}`, {
+                    method: 'POST',
+                    body: value,
+                    headers: {
+                        'Content-Type': 'text/plain'
+                    }
+                });
+
+                const responseText = await response.text();
+                const statusText = `HTTP ${response.status} ${response.statusText}`;
+
+                if (response.ok) {
+                    showResult(resultDiv, `✅ 设置成功!\n状态: ${statusText}\n响应: ${responseText}`, 'success');
+                } else {
+                    showResult(resultDiv, `❌ 设置失败!\n状态: ${statusText}\n错误: ${responseText}`, 'error');
+                }
+            } catch (error) {
+                showResult(resultDiv, `❌ 网络错误: ${error.message}`, 'error');
+            }
+        }
+
+        // 获取键值
+        async function getKeyValue() {
+            const key = document.getElementById('getKey').value.trim();
+            const resultDiv = document.getElementById('getResult');
+
+            if (!key) {
+                showResult(resultDiv, '请输入键名', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/${encodeURIComponent(key)}`);
+                const responseText = await response.text();
+                const statusText = `HTTP ${response.status} ${response.statusText}`;
+
+                if (response.ok) {
+                    showResult(resultDiv, `✅ 获取成功!\n状态: ${statusText}\n值: ${responseText}`, 'success');
+                } else {
+                    showResult(resultDiv, `❌ 获取失败!\n状态: ${statusText}\n错误: ${responseText}`, 'error');
+                }
+            } catch (error) {
+                showResult(resultDiv, `❌ 网络错误: ${error.message}`, 'error');
+            }
+        }
+
+        // 删除键值对
+        async function deleteKeyValue() {
+            const key = document.getElementById('deleteKey').value.trim();
+            const resultDiv = document.getElementById('deleteResult');
+
+            if (!key) {
+                showResult(resultDiv, '请输入键名', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/${encodeURIComponent(key)}`, {
+                    method: 'DELETE'
+                });
+
+                const responseText = await response.text();
+                const statusText = `HTTP ${response.status} ${response.statusText}`;
+
+                if (response.ok || response.status === 204) {
+                    showResult(resultDiv, `✅ 删除成功!\n状态: ${statusText}`, 'success');
+                } else {
+                    showResult(resultDiv, `❌ 删除失败!\n状态: ${statusText}\n错误: ${responseText}`, 'error');
+                }
+            } catch (error) {
+                showResult(resultDiv, `❌ 网络错误: ${error.message}`, 'error');
+            }
+        }
+
+        // 快速测试
+        async function quickTest(type) {
+            const resultDiv = document.getElementById('quickTestResult');
+            const testKey = 'quick_test_key';
+            const testValue = 'Quick test value - ' + new Date().toLocaleString();
+
+            try {
+                switch (type) {
+                    case 'set':
+                        const setResponse = await fetch(`${API_URL}/${testKey}`, {
+                            method: 'POST',
+                            body: testValue
+                        });
+                        const setResult = await setResponse.text();
+                        showResult(resultDiv, `🚀 快速设置测试\n状态: HTTP ${setResponse.status}\n响应: ${setResult}`, setResponse.ok ? 'success' : 'error');
+                        break;
+
+                    case 'get':
+                        const getResponse = await fetch(`${API_URL}/${testKey}`);
+                        const getValue = await getResponse.text();
+                        showResult(resultDiv, `🔍 快速获取测试\n状态: HTTP ${getResponse.status}\n值: ${getValue}`, getResponse.ok ? 'success' : 'error');
+                        break;
+
+                    case 'delete':
+                        const deleteResponse = await fetch(`${API_URL}/${testKey}`, {
+                            method: 'DELETE'
+                        });
+                        const deleteResult = await deleteResponse.text();
+                        showResult(resultDiv, `🗑️ 快速删除测试\n状态: HTTP ${deleteResponse.status}\n响应: ${deleteResult}`, (deleteResponse.ok || deleteResponse.status === 204) ? 'success' : 'error');
+                        break;
+
+                    case 'all':
+                        let allResults = '🎯 完整测试流程:\n\n';
+
+                        // 1. 设置
+                        const setResp = await fetch(`${API_URL}/${testKey}`, {
+                            method: 'POST',
+                            body: testValue
+                        });
+                        allResults += `1. 设置键值对: HTTP ${setResp.status} - ${setResp.ok ? '✅' : '❌'}\n`;
+
+                        // 2. 获取
+                        const getResp = await fetch(`${API_URL}/${testKey}`);
+                        const gotValue = await getResp.text();
+                        allResults += `2. 获取键值: HTTP ${getResp.status} - ${getResp.ok ? '✅' : '❌'}\n`;
+                        if (getResp.ok) {
+                            allResults += `   获取的值: ${gotValue}\n`;
+                        }
+
+                        // 3. 删除
+                        const delResp = await fetch(`${API_URL}/${testKey}`, {
+                            method: 'DELETE'
+                        });
+                        allResults += `3. 删除键值对: HTTP ${delResp.status} - ${(delResp.ok || delResp.status === 204) ? '✅' : '❌'}\n`;
+
+                        // 4. 验证删除
+                        const verifyResp = await fetch(`${API_URL}/${testKey}`);
+                        allResults += `4. 验证删除: HTTP ${verifyResp.status} - ${verifyResp.status === 404 ? '✅' : '❌'}\n`;
+
+                        const allSuccess = setResp.ok && getResp.ok && (delResp.ok || delResp.status === 204) && verifyResp.status === 404;
+                        showResult(resultDiv, allResults, allSuccess ? 'success' : 'error');
+                        break;
+                }
+            } catch (error) {
+                showResult(resultDiv, `❌ 快速测试失败: ${error.message}`, 'error');
+            }
+        }
+
+        // 批量测试
+        async function batchTest() {
+            const resultDiv = document.getElementById('batchResult');
+            const testData = [
+                { key: 'user:1', value: 'Alice' },
+                { key: 'user:2', value: 'Bob' },
+                { key: 'config:timeout', value: '30' },
+                { key: 'config:retries', value: '3' },
+                { key: '中文键', value: '中文值' }
+            ];
+
+            let results = '⚡ 批量测试结果:\n\n';
+            let successCount = 0;
+            let totalOperations = testData.length * 3; // set, get, delete for each
+
+            try {
+                for (let i = 0; i < testData.length; i++) {
+                    const { key, value } = testData[i];
+                    results += `测试 ${i + 1}: ${key}\n`;
+
+                    // 设置
+                    try {
+                        const setResp = await fetch(`${API_URL}/${encodeURIComponent(key)}`, {
+                            method: 'POST',
+                            body: value
+                        });
+                        results += `  设置: HTTP ${setResp.status} ${setResp.ok ? '✅' : '❌'}\n`;
+                        if (setResp.ok) successCount++;
+                    } catch (e) {
+                        results += `  设置: 错误 ❌\n`;
+                    }
+
+                    // 获取
+                    try {
+                        const getResp = await fetch(`${API_URL}/${encodeURIComponent(key)}`);
+                        const gotValue = await getResp.text();
+                        results += `  获取: HTTP ${getResp.status} ${getResp.ok ? '✅' : '❌'}`;
+                        if (getResp.ok) {
+                            results += ` (${gotValue === value ? '值匹配' : '值不匹配'})`;
+                            if (gotValue === value) successCount++;
+                        }
+                        results += '\n';
+                    } catch (e) {
+                        results += `  获取: 错误 ❌\n`;
+                    }
+
+                    // 删除
+                    try {
+                        const delResp = await fetch(`${API_URL}/${encodeURIComponent(key)}`, {
+                            method: 'DELETE'
+                        });
+                        results += `  删除: HTTP ${delResp.status} ${(delResp.ok || delResp.status === 204) ? '✅' : '❌'}\n`;
+                        if (delResp.ok || delResp.status === 204) successCount++;
+                    } catch (e) {
+                        results += `  删除: 错误 ❌\n`;
+                    }
+
+                    results += '\n';
+                }
+
+                results += `总结: ${successCount}/${totalOperations} 操作成功 (${Math.round(successCount/totalOperations*100)}%)`;
+                showResult(resultDiv, results, successCount === totalOperations ? 'success' : 'info');
+
+            } catch (error) {
+                showResult(resultDiv, `❌ 批量测试失败: ${error.message}`, 'error');
+            }
+        }
+
+        // 显示结果
+        function showResult(element, message, type) {
+            element.textContent = message;
+            element.className = `result ${type}`;
+            element.style.display = 'block';
+        }
+
+        // 页面加载时检查服务器状态
+        document.addEventListener('DOMContentLoaded', function() {
+            checkServerStatus();
+            // 每30秒检查一次服务器状态
+            setInterval(checkServerStatus, 30000);
+        });
+    </script>
+</body>
+</html>
+

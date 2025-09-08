@@ -222,6 +222,27 @@
             text-align: center;
         }
 
+        .btn-small {
+            padding: 8px 16px;
+            font-size: 0.9em;
+            min-width: auto;
+        }
+
+        input[type="number"] {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e1e1e1;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s ease;
+        }
+
+        input[type="number"]:focus {
+            outline: none;
+            border-color: #4facfe;
+            box-shadow: 0 0 0 3px rgba(79, 172, 254, 0.1);
+        }
+
         @media (max-width: 768px) {
             .container {
                 margin: 10px;
@@ -250,6 +271,23 @@
         </div>
 
         <div class="content">
+            <!-- 服务器配置 -->
+            <div class="section">
+                <h2>⚙️ 服务器配置</h2>
+                <div style="display: flex; gap: 15px; align-items: end; flex-wrap: wrap;">
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label for="serverHost">服务器地址:</label>
+                        <input type="text" id="serverHost" value="localhost" placeholder="localhost" style="width: 120px;">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label for="serverPort">端口:</label>
+                        <input type="number" id="serverPort" value="8080" placeholder="8080" min="1" max="65535" style="width: 80px;">
+                    </div>
+                    <button class="btn btn-small" onclick="updateServerConfig()">更新配置</button>
+                    <button class="btn btn-small" onclick="autoDetectPort()">自动检测</button>
+                </div>
+            </div>
+
             <!-- 服务器状态 -->
             <div id="serverStatus" class="server-status offline">
                 <span class="status-indicator offline"></span>
@@ -316,10 +354,90 @@
         </div>
     </div>
 
-    <script>
-        const SERVER_URL = 'http://localhost:8080';
+        <script>
+        // 动态服务器配置
+        let currentServerHost = 'localhost';
+        let currentServerPort = 8080;
+        let SERVER_URL = `http://${currentServerHost}:${currentServerPort}`;
+        let API_URL = SERVER_URL + '/api';
 
-        const API_URL = SERVER_URL + '/api';
+        // 更新服务器配置
+        function updateServerConfig() {
+            const host = document.getElementById('serverHost').value.trim() || 'localhost';
+            const port = parseInt(document.getElementById('serverPort').value) || 8080;
+
+            if (port < 1 || port > 65535) {
+                alert('端口号必须在 1-65535 之间');
+                return;
+            }
+
+            currentServerHost = host;
+            currentServerPort = port;
+            SERVER_URL = `http://${currentServerHost}:${currentServerPort}`;
+            API_URL = SERVER_URL + '/api';
+
+            // 立即检查新配置的服务器状态
+            checkServerStatus();
+
+            // 保存配置到本地存储
+            localStorage.setItem('kv_server_host', host);
+            localStorage.setItem('kv_server_port', port.toString());
+        }
+
+        // 自动检测端口
+        async function autoDetectPort() {
+            const host = document.getElementById('serverHost').value.trim() || 'localhost';
+            const commonPorts = [8080, 3000, 8000, 9000, 8888, 5000, 8081, 8082];
+            const statusDiv = document.getElementById('serverStatus');
+
+            statusDiv.innerHTML = '<span class="status-indicator offline"></span>正在自动检测端口...';
+
+            for (const port of commonPorts) {
+                try {
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), 1000);
+
+                    const response = await fetch(`http://${host}:${port}/health`, {
+                        method: 'GET',
+                        signal: controller.signal
+                    });
+
+                    clearTimeout(timeoutId);
+
+                    if (response.ok) {
+                        document.getElementById('serverPort').value = port;
+                        updateServerConfig();
+                        return;
+                    }
+                } catch (error) {
+                    // 继续尝试下一个端口
+                }
+            }
+
+            statusDiv.innerHTML = '<span class="status-indicator offline"></span>未找到运行中的服务器';
+        }
+
+        // 页面加载时恢复保存的配置
+        function loadSavedConfig() {
+            const savedHost = localStorage.getItem('kv_server_host');
+            const savedPort = localStorage.getItem('kv_server_port');
+
+            if (savedHost) {
+                document.getElementById('serverHost').value = savedHost;
+                currentServerHost = savedHost;
+            }
+
+            if (savedPort) {
+                const port = parseInt(savedPort);
+                if (port >= 1 && port <= 65535) {
+                    document.getElementById('serverPort').value = port;
+                    currentServerPort = port;
+                }
+            }
+
+            SERVER_URL = `http://${currentServerHost}:${currentServerPort}`;
+            API_URL = SERVER_URL + '/api';
+        }
 
         // 检查服务器状态
         async function checkServerStatus() {
@@ -370,11 +488,11 @@
             if (isOnline) {
                 statusElement.className = 'server-status online';
                 indicator.className = 'status-indicator online';
-                statusElement.innerHTML = '<span class="status-indicator online"></span>服务器在线 (localhost:8080)';
+                statusElement.innerHTML = `<span class="status-indicator online"></span>服务器在线 (${currentServerHost}:${currentServerPort})`;
             } else {
                 statusElement.className = 'server-status offline';
                 indicator.className = 'status-indicator offline';
-                statusElement.innerHTML = '<span class="status-indicator offline"></span>服务器离线 - 请确保服务器正在运行';
+                statusElement.innerHTML = `<span class="status-indicator offline"></span>服务器离线 (${currentServerHost}:${currentServerPort}) - 请确保服务器正在运行`;
             }
         }
 
@@ -607,8 +725,11 @@
             element.style.display = 'block';
         }
 
-        // 页面加载时检查服务器状态
+        // 页面加载时初始化
         document.addEventListener('DOMContentLoaded', function() {
+            // 加载保存的配置
+            loadSavedConfig();
+            // 检查服务器状态
             checkServerStatus();
             // 每30秒检查一次服务器状态
             setInterval(checkServerStatus, 30000);

@@ -13,7 +13,7 @@ static size_t hash_function(const char *key, size_t capacity) {
     return hash % capacity;
 }
 
-static HashEntry* create_entry(const char *key, const char *value) {
+static HashEntry *create_entry(const char *key, const char *value) {
     HashEntry *entry = malloc(sizeof(HashEntry));
     if (!entry) return NULL;
     entry->key = strdup(key);
@@ -36,11 +36,13 @@ static void free_entry(HashEntry *entry) {
     }
 }
 
-KVStore* kv_store_create(size_t initial_capacity) {
-    if (initial_capacity == 0) initial_capacity = DEFAULT_CAPACITY;
+KVStore *kv_store_create(size_t initial_capacity) {
+    if (initial_capacity == 0) {
+        initial_capacity = DEFAULT_CAPACITY;
+    }
     KVStore *store = malloc(sizeof(KVStore));
     if (!store) return NULL;
-    store->buckets = calloc(initial_capacity, sizeof(HashEntry*));
+    store->buckets = calloc(initial_capacity, sizeof(HashEntry *));
     if (!store->buckets) {
         free(store);
         return NULL;
@@ -86,7 +88,7 @@ bool kv_set(KVStore *store, const char *key, const char *value) {
     return true;
 }
 
-char* kv_get(KVStore *store, const char *key) {
+char *kv_get(KVStore *store, const char *key) {
     if (!store || !key) return NULL;
     size_t index = hash_function(key, store->capacity);
     HashEntry *entry = store->buckets[index];

@@ -66,7 +66,7 @@ make clean
 如果你想直接使用编译器命令编译，可以使用以下命令：
 
 ```bash
-cc -o main src/main.c src/c_x.c -Iinclude
+cc -o main src/main.c -Iinclude
 ```
 
 然后运行：

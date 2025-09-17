@@ -1,34 +1,205 @@
-# 构建目录
-build/
-cmake-build-*/
-
-# IDE文件
-.idea/
-.vscode/
-*.swp
-*.swo
-
 # 编译产物
+build/
+build-*/
 *.o
 *.obj
 *.exe
 *.out
-*.a
-*.so
-*.dll
-*.dylib
+*.app
+*.dSYM/
+c_x
 
-# CMake生成的文件
+# CMake 生成的文件
 CMakeCache.txt
 CMakeFiles/
 cmake_install.cmake
-install_manifest.txt
-compile_commands.json
+Makefile
+*.cmake
+!CMakeLists.txt
 
-# 生成的版本文件
-include/version.h
-
-# 系统文件
+# IDE 文件
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
 .DS_Store
 Thumbs.db
 
+# 调试文件
+*.pdb
+*.ilk
+*.map
+*.tlog
+*.idb
+*.ipdb
+*.pgc
+*.pgd
+*.rsp
+*.sbr
+*.tlb
+*.tli
+*.tlh
+*.tmp
+*.tmp_proj
+*.log
+*.vspscc
+*.vssscc
+.builds
+*.pidb
+*.svclog
+*.scc
+
+# 测试和覆盖率文件
+*.gcno
+*.gcda
+*.gcov
+coverage/
+*.info
+lcov.info
+
+# 静态分析报告
+cppcheck-report.txt
+scan-build-*/
+*.sarif
+
+# 包管理器文件
+conan.lock
+conanbuildinfo.*
+conandata.yml
+conanfile.py.orig
+
+# 临时文件
+*.tmp
+*.temp
+*.bak
+*.backup
+*.orig
+*.rej
+*.patch
+
+# 系统文件
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# 日志文件
+*.log
+logs/
+
+# 运行时文件
+*.pid
+*.lock
+
+# 压缩文件
+*.tar.gz
+*.zip
+*.7z
+*.rar
+
+# 发布包
+release/
+deploy/
+dist/
+*.tar.gz
+*.deb
+*.rpm
+*.dmg
+*.pkg
+
+# 文档生成
+docs/_build/
+docs/html/
+docs/latex/
+*.pdf
+
+# 性能分析文件
+*.prof
+*.perf
+callgrind.out.*
+massif.out.*
+
+# 内存检查文件
+valgrind-*.log
+*.memcheck
+
+# 编辑器配置（保留项目级配置）
+!.clang-format
+!.editorconfig
+
+# 环境变量文件
+.env
+.env.local
+.env.*.local
+
+# 本地配置文件
+config.local.*
+settings.local.*
+
+# 数据文件
+*.db
+*.sqlite
+*.sqlite3
+data/
+storage/
+
+# 网络抓包文件
+*.pcap
+*.pcapng
+
+# 核心转储文件
+core
+core.*
+*.core
+
+# 特定于 macOS 的文件
+.AppleDouble
+.LSOverride
+Icon?
+
+# 特定于 Linux 的文件
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
+
+# 特定于 Windows 的文件
+*.lnk
+desktop.ini
+$RECYCLE.BIN/
+
+# JetBrains IDEs
+.idea/
+*.iws
+*.iml
+*.ipr
+out/
+
+# Visual Studio Code
+.vscode/
+*.code-workspace
+
+# Xcode
+*.xcodeproj/
+*.xcworkspace/
+DerivedData/
+*.hmap
+*.ipa
+*.xcuserstate
+
+# Qt Creator
+CMakeLists.txt.user*
+
+# 其他构建系统
+.ninja_deps
+.ninja_log
+compile_commands.json
+
+
+# 生成的版本文件
+include/version.h
